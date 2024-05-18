@@ -268,7 +268,7 @@ public class OreMagnetItem extends Item {
 			//check if the tag is a valid ore tag
 			if (tag.location().getPath().contains("ores_in_ground/")) {
 				//grab the part after the slash for use later
-				String oreground = tag.location().getPath().substring(15);
+				String oreground = tag.location().getPath().substring("ores_in_ground/".length());
 				//check if a tag for ore grounds matches up with our ores in ground tag
 				if (BuiltInRegistries.BLOCK.getTagNames().filter(location -> location.location().getNamespace().equals("c")).anyMatch(blockTagKey -> blockTagKey.location().getPath().equals("ore_bearing_ground/" + oreground))) {
 					//add each ground type to each ore
