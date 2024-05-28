@@ -29,13 +29,10 @@ public class TimeTreeFeature extends HollowTreeFeature {
 		final int radius = 1;
 
 		// do we have enough height?
-		if (world.isOutsideBuildHeight(pos.getY() + 1) || world.isOutsideBuildHeight(pos.getY() + height + radius)
+		if (world.isOutsideBuildHeight(pos.getY() + 1)
+			|| world.isOutsideBuildHeight(pos.getY() + height + radius)
 			|| FeatureUtil.isAnyMatchInArea(pos.subtract(new Vec3i(1, 4, 1)), 3, 4, 3, blockPos -> world.getBlockState(blockPos).is(BlockTags.FEATURES_CANNOT_REPLACE))
-			|| FeatureUtil.isAnyMatchInArea(pos.subtract(new Vec3i(1, 0, 1)), 3, 16, 3, blockPos -> {
-			if (blockPos  == pos)
-				return true;
-			return !TreeFeature.validTreePos(world, blockPos);
-		})) {
+			|| FeatureUtil.isAnyMatchInArea(pos.subtract(new Vec3i(1, 0, 1)), 3, 16, 3, blockPos -> !TreeFeature.validTreePos(world, blockPos) || blockPos == pos)) {
 				return false;
  		}
 
