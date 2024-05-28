@@ -310,13 +310,13 @@ public final class FeaturePlacers {
 	public static void traceExposedRoot(LevelSimulatedReader worldReader, RootPlacer worldPlacer, RandomSource random, BlockStateProvider exposedRoot, BlockStateProvider dirtRoot, Iterable<BlockPos> posTracer) {
 		// Trace block positions and alternate the root tracing once "underground"
 		for (BlockPos exposedPos : posTracer) {
-			if (worldReader.isStateAtPosition(exposedPos, FeatureLogic.ROOT_SHOULD_SKIP) )
-				continue;
+			if (FeatureUtil.anyBelowMatch(exposedPos, worldPlacer.getRootPenetrability(), (blockPos -> worldReader.isStateAtPosition(blockPos, FeatureLogic.ROOT_SHOULD_SKIP))))
+				return;
 
 			// Is the position considered not underground?
 			if (FeatureLogic.hasEmptyNeighborExceptBelow(worldReader, exposedPos)) {
 				// Check if the position is not replaceable
-				if (FeatureUtil.anyBelowMatch(exposedPos, worldPlacer.getRootPenetrability(), (blockPos -> worldReader.isStateAtPosition(blockPos, blockState -> blockState.is(BlockTags.FEATURES_CANNOT_REPLACE)))))
+				if (FeatureUtil.anyBelowMatch(exposedPos, worldPlacer.getRootPenetrability(), (blockPos -> worldReader.isStateAtPosition(blockPos, FeatureLogic::worldGenReplaceable))))
 					return; // Root must stop
 
 				// Good to go!
