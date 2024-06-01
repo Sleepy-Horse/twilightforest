@@ -40,7 +40,7 @@ public abstract class TwilightJigsawPiece extends TwilightTemplateStructurePiece
 		this(type, genDepth, structureManager, templateLocation, jigsawContext.placementSettings(), jigsawContext.templatePos(), jigsawContext.seedJigsaw(), jigsawContext.spareJigsaws());
 	}
 
-	public TwilightJigsawPiece(StructurePieceType type, int genDepth, StructureTemplateManager structureManager, ResourceLocation templateLocation, StructurePlaceSettings placeSettings, BlockPos startPosition, @Nullable JigsawRecord sourceJigsaw, List<JigsawRecord> spareJigsaws) {
+	private TwilightJigsawPiece(StructurePieceType type, int genDepth, StructureTemplateManager structureManager, ResourceLocation templateLocation, StructurePlaceSettings placeSettings, BlockPos startPosition, @Nullable JigsawRecord sourceJigsaw, List<JigsawRecord> spareJigsaws) {
 		super(type, genDepth, structureManager, templateLocation, placeSettings, startPosition);
 
 		this.sourceJigsaw = sourceJigsaw;
@@ -97,6 +97,11 @@ public abstract class TwilightJigsawPiece extends TwilightTemplateStructurePiece
 	}
 
 	protected abstract void processJigsaw(StructurePiece parent, StructurePieceAccessor pieceAccessor, RandomSource random, JigsawRecord connection);
+
+	@Nullable
+	public JigsawRecord getSourceJigsaw() {
+		return this.sourceJigsaw;
+	}
 
 	public List<JigsawRecord> getSpareJigsaws() {
 		return this.spareJigsaws;

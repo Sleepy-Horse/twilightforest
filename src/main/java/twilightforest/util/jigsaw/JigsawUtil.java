@@ -17,6 +17,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class JigsawUtil {
+	public static Direction getAbsoluteHorizontal(FrontAndTop orientation) {
+		if (orientation.front().getAxis() == Direction.Axis.Y) {
+			return orientation.top();
+		} else {
+			return orientation.front();
+		}
+	}
+
 	public static FrontAndTop process(FrontAndTop source, StructurePlaceSettings settings) {
 		return settings.getRotation().rotation().rotate(source);
 	}

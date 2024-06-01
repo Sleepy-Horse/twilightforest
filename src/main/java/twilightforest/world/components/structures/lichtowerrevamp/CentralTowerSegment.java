@@ -3,6 +3,7 @@ package twilightforest.world.components.structures.lichtowerrevamp;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.FrontAndTop;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -19,42 +20,70 @@ import twilightforest.util.jigsaw.JigsawRecord;
 import twilightforest.world.components.structures.TwilightJigsawPiece;
 
 public final class CentralTowerSegment extends TwilightJigsawPiece implements PieceBeardifierModifier {
+	private final boolean putMobBridge;
+
 	public CentralTowerSegment(StructurePieceSerializationContext ctx, CompoundTag compoundTag) {
 		super(TFStructurePieceTypes.CENTRAL_TOWER.get(), compoundTag, ctx, readSettings(compoundTag));
+
+		this.putMobBridge = compoundTag.getBoolean("put_bridge");
 	}
 
-	public CentralTowerSegment(StructureTemplateManager structureManager, int genDepth, JigsawPlaceContext jigsawContext) {
+	public CentralTowerSegment(StructureTemplateManager structureManager, int genDepth, JigsawPlaceContext jigsawContext, boolean putMobBridge) {
 		super(TFStructurePieceTypes.CENTRAL_TOWER.get(), genDepth, structureManager, TwilightForestMod.prefix("lich_tower/tower_slice"), jigsawContext);
+
+		this.putMobBridge = putMobBridge;
 	}
 
-	public static void putTowerSegment(StructurePieceAccessor pieceAccessor, RandomSource random, BlockPos sourceJigsawPos, FrontAndTop sourceOrientation, TwilightJigsawPiece parent, StructureTemplateManager structureManager) {
+	@Override
+	protected void addAdditionalSaveData(StructurePieceSerializationContext ctx, CompoundTag structureTag) {
+		super.addAdditionalSaveData(ctx, structureTag);
+
+		structureTag.putBoolean("put_bridge", this.putMobBridge);
+	}
+
+	public static void putTowerSegment(StructurePieceAccessor pieceAccessor, RandomSource random, BlockPos sourceJigsawPos, FrontAndTop sourceOrientation, TwilightJigsawPiece parent, StructureTemplateManager structureManager, boolean putMobBridge) {
 		JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(parent, sourceJigsawPos, sourceOrientation, structureManager, TwilightForestMod.prefix("lich_tower/tower_slice"), "twilightforest:lich_tower/tower_below", random);
 
 		if (placeableJunction == null) return;
 
-		StructurePiece towerBase = new CentralTowerSegment(structureManager, parent.getGenDepth() + 1, placeableJunction);
+		StructurePiece towerBase = new CentralTowerSegment(structureManager, parent.getGenDepth() + 1, placeableJunction, putMobBridge);
 		pieceAccessor.addPiece(towerBase);
 		towerBase.addChildren(parent, pieceAccessor, random);
 	}
 
 	@Override
-	protected void processJigsaw(StructurePiece parent, StructurePieceAccessor pieceAccessor, RandomSource random, JigsawRecord record) {
-		if ("twilightforest:lich_tower/tower_below".equals(record.target())) {
-			if (this.genDepth < random.nextInt(4) + 6) {
-				CentralTowerSegment.putTowerSegment(pieceAccessor, random, record.pos(), record.orientation(), this, this.structureManager);
-			} else {
-				JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(this, record.pos(), record.orientation(), this.structureManager, TwilightForestMod.prefix("lich_tower/tower_boss_room"), "twilightforest:lich_tower/tower_below", random);
+	protected void processJigsaw(StructurePiece parent, StructurePieceAccessor pieceAccessor, RandomSource random, JigsawRecord connection) {
+		switch (connection.target()) {
+			case "twilightforest:lich_tower/tower_below" -> {
+				if (this.genDepth < random.nextInt(4) + 6) {
+					CentralTowerSegment.putTowerSegment(pieceAccessor, random, connection.pos(), connection.orientation(), this, this.structureManager, !this.putMobBridge && random.nextInt(3) != 0);
+				} else {
+					JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(this, connection.pos(), connection.orientation(), this.structureManager, TwilightForestMod.prefix("lich_tower/tower_boss_room"), "twilightforest:lich_tower/tower_below", random);
 
-				if (placeableJunction == null) {
-					return;
+					if (placeableJunction != null) {
+						StructurePiece bossRoom = new BossRoom(this.structureManager, placeableJunction);
+						pieceAccessor.addPiece(bossRoom);
+						bossRoom.addChildren(this, pieceAccessor, random);
+					}
 				}
-
-				StructurePiece bossRoom = new BossRoom(this.structureManager, placeableJunction);
-				pieceAccessor.addPiece(bossRoom);
-				bossRoom.addChildren(this, pieceAccessor, random);
 			}
-		} else if ("twilightforest:lich_tower/bridge".equals(record.target()) && random.nextInt(this.genDepth * 2) == 0) {
-			TowerBridge.putBridge(this, pieceAccessor, random, record.pos(), record.orientation(), this.structureManager, true, 4 - random.nextInt(2) - (random.nextInt(this.genDepth) >> 1) - (this.genDepth >> 2), this.getGenDepth() + 1);
+			case "twilightforest:lich_tower/bridge" -> {
+				if (random.nextInt(this.genDepth * 2) == 0) {
+					TowerBridge.putBridge(this, pieceAccessor, random, connection.pos(), connection.orientation(), this.structureManager, true, 4 - random.nextInt(2) - (random.nextInt(this.genDepth) >> 1) - (this.genDepth >> 2), this.getGenDepth() + 1);
+				}
+			}
+			case "twilightforest:mob_bridge" -> {
+				if (this.putMobBridge) {
+					ResourceLocation mobBridgeLocation = TowerPieces.rollMobBridge(random);
+					JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(this, connection.pos(), connection.orientation(), this.structureManager, mobBridgeLocation, "twilightforest:mob_bridge", random);
+
+					if (placeableJunction != null) {
+						StructurePiece mobBridgePiece = new TowerMobBridge(this.genDepth + 1, this.structureManager, mobBridgeLocation, placeableJunction);
+						pieceAccessor.addPiece(mobBridgePiece);
+						mobBridgePiece.addChildren(this, pieceAccessor, random);
+					}
+				}
+			}
 		}
 	}
 

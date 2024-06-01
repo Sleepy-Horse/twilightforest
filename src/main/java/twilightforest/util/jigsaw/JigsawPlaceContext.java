@@ -19,7 +19,10 @@ import java.util.List;
 
 public record JigsawPlaceContext(BlockPos templatePos, StructurePlaceSettings placementSettings, JigsawRecord seedJigsaw, List<JigsawRecord> spareJigsaws) {
 	@Nullable
-	public static JigsawPlaceContext pickPlaceableJunction(TwilightJigsawPiece parent, BlockPos sourceJigsawPos, FrontAndTop sourceOrientation, StructureTemplateManager structureManager, ResourceLocation templateLocation, String jigsawLabel, RandomSource random) {
+	public static JigsawPlaceContext pickPlaceableJunction(TwilightJigsawPiece parent, BlockPos sourceJigsawPos, FrontAndTop sourceOrientation, StructureTemplateManager structureManager, @Nullable ResourceLocation templateLocation, String jigsawLabel, RandomSource random) {
+		if (templateLocation == null)
+			return null;
+
 		List<StructureTemplate.StructureBlockInfo> connectables = JigsawUtil.readConnectableJigsaws(
 			structureManager,
 			templateLocation,
@@ -81,6 +84,6 @@ public record JigsawPlaceContext(BlockPos templatePos, StructurePlaceSettings pl
 		// The unconnectedJigsaws list was created without StructurePlaceSettings configuration, so the list needs processing while also applying StructurePlaceSettings
 		List<JigsawRecord> spareJigsaws = JigsawRecord.fromUnprocessedInfos(unconnectedJigsaws, placementSettings, random);
 
-		return new JigsawPlaceContext(placePos, placementSettings, seedJigsaw, spareJigsaws);
+		return new JigsawPlaceContext(placePos, placementSettings, seedJigsaw.reconfigure(placementSettings), spareJigsaws);
 	}
 }

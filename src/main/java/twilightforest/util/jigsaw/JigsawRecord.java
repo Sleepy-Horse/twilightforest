@@ -19,7 +19,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public record JigsawRecord(int priority, FrontAndTop orientation, BlockPos pos, String name, String target) {
-
 	public static List<JigsawRecord> allFromTemplate(StructureTemplateManager structureManager, ResourceLocation templateLocation, StructurePlaceSettings placeSettings) {
 		// StructureTemplate#filterBlocks() does not support mirroring, force NONE
 		placeSettings.setMirror(Mirror.NONE);
@@ -82,5 +81,15 @@ public record JigsawRecord(int priority, FrontAndTop orientation, BlockPos pos, 
 		ret.putString("target", this.target);
 
 		return ret;
+	}
+
+	public JigsawRecord reconfigure(StructurePlaceSettings settings) {
+		return new JigsawRecord(
+			this.priority,
+			JigsawUtil.process(this.orientation, settings),
+			StructureTemplate.calculateRelativePosition(settings, this.pos()),
+			this.name,
+			this.target
+		);
 	}
 }

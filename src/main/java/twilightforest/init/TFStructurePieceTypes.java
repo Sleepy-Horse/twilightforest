@@ -89,7 +89,9 @@ public class TFStructurePieceTypes {
 	public static final DeferredHolder<StructurePieceType, StructurePieceType> TOWER_FOYER = registerPieceType("TFLT" + "TFoy", TowerFoyer::new);
 	public static final DeferredHolder<StructurePieceType, StructurePieceType> CENTRAL_TOWER_BASE = registerPieceType("TFLT" + "CTBase", CentralTowerBase::new);
 	public static final DeferredHolder<StructurePieceType, StructurePieceType> CENTRAL_TOWER = registerPieceType("TFLT" + "CTSeg", CentralTowerSegment::new);
+	public static final DeferredHolder<StructurePieceType, StructurePieceType> MOB_BRIDGE = registerPieceType("TFLT" + "MobBridge", TowerMobBridge::new);
 	public static final DeferredHolder<StructurePieceType, StructurePieceType> TOWER_BRIDGE = registerPieceType("TFLT" + "Bridge", TowerBridge::new);
+	public static final DeferredHolder<StructurePieceType, StructurePieceType> TOWER_ROOF = registerPieceType("TFLT" + "TRoof", TowerRoof::new);
 	public static final DeferredHolder<StructurePieceType, StructurePieceType> TOWER_ROOM = registerPieceType("TFLT" + "TRoom", TowerRoom::new);
 	public static final DeferredHolder<StructurePieceType, StructurePieceType> TOWER_BOSS_ROOM = registerPieceType("TFLT" + "TBoss", BossRoom::new);
 
