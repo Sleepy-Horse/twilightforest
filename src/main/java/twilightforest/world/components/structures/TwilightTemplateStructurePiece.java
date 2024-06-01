@@ -55,6 +55,10 @@ public abstract class TwilightTemplateStructurePiece extends TemplateStructurePi
 
 		structureTag.putInt("rotation", this.placeSettings.getRotation().ordinal());
 		structureTag.putInt("mirror", this.placeSettings.getMirror().ordinal());
+		BlockPos pivot = this.placeSettings.getRotationPivot();
+		structureTag.putInt("pivot_x", pivot.getX());
+		structureTag.putInt("pivot_y", pivot.getY());
+		structureTag.putInt("pivot_z", pivot.getZ());
 	}
 
 	// This will be required if you want to dig a piece into a noise beard
@@ -73,6 +77,7 @@ public abstract class TwilightTemplateStructurePiece extends TemplateStructurePi
 		return new StructurePlaceSettings()
 			.setRotation(ArrayUtil.wrapped(Rotation.values(), compoundTag.getInt("rotation")))
 			.setMirror(ArrayUtil.wrapped(Mirror.values(), compoundTag.getInt("mirror")))
+			.setRotationPivot(new BlockPos(compoundTag.getInt("pivot_x"), compoundTag.getInt("pivot_y"), compoundTag.getInt("pivot_z")))
 			.addProcessor(BlockIgnoreProcessor.STRUCTURE_BLOCK);
 	}
 

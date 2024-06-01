@@ -87,10 +87,9 @@ public class TFStructurePieceTypes {
 
 	// New Lich Tower
 	public static final DeferredHolder<StructurePieceType, StructurePieceType> TOWER_FOYER = registerPieceType("TFLT" + "TFoy", TowerFoyer::new);
-	public static final DeferredHolder<StructurePieceType, StructurePieceType> TOWER_BOSS_ROOM = registerPieceType("TFLT" + "TBoss", BossRoom::new);
+	public static final DeferredHolder<StructurePieceType, StructurePieceType> CENTRAL_TOWER_BASE = registerPieceType("TFLT" + "CTBase", CentralTowerBase::new);
 	public static final DeferredHolder<StructurePieceType, StructurePieceType> CENTRAL_TOWER = registerPieceType("TFLT" + "CTSeg", CentralTowerSegment::new);
-	public static final DeferredHolder<StructurePieceType, StructurePieceType> CENTRAL_TO_SIDE_TOWER = registerPieceType("TFLT" + "C2ST", CentralTowerAttachment::new);
-	public static final DeferredHolder<StructurePieceType, StructurePieceType> SIDE_TOWER_ROOM = registerPieceType("TFLT" + "STRm", SideTowerRoom::new);
+	public static final DeferredHolder<StructurePieceType, StructurePieceType> TOWER_BOSS_ROOM = registerPieceType("TFLT" + "TBoss", BossRoom::new);
 
 	// Labyrinth
 	//public static final DeferredHolder<StructurePieceType, StructurePieceType> TFLr = registerPieceType("TFLr", StructureStartLabyrinth::new);
