@@ -5,7 +5,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 
 public final class RotationUtil {
 	public static final Rotation[] ROTATIONS = Rotation.values();
@@ -92,17 +91,5 @@ public final class RotationUtil {
 
 	public static Mirror mirrorOverAxis(boolean shouldFlip, Direction.Axis axis) {
 		return shouldFlip ? (axis == Direction.Axis.X ? Mirror.LEFT_RIGHT : Mirror.FRONT_BACK) : Mirror.NONE;
-	}
-
-	public static void mirrorPlaceSettings(Mirror mirror, StructurePlaceSettings settings) {
-		if (mirror == Mirror.NONE)
-			return;
-
-		if (settings.getMirror() == mirror) {
-			settings.setMirror(Mirror.NONE);
-		} else {
-			settings.setMirror(Mirror.NONE);
-			settings.setRotation(settings.getRotation().getRotated(Rotation.CLOCKWISE_180));
-		}
 	}
 }

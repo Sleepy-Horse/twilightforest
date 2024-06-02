@@ -86,6 +86,7 @@ public class JigsawUtil {
 		return jigsawConnections.build();
 	}
 
+	// Structure pieces being placed via 'placer' BiConsumer MUST match param otherTemplate in size. Or else you will encounter size discrepancies!
 	public static void generateAtJunctions(RandomSource random, TemplateStructurePiece sourcePiece, StructureTemplate otherTemplate, String sourceLabel, String otherLabel, boolean canFlip, BiConsumer<BlockPos, StructurePlaceSettings> placer) {
 		List<StructureTemplate.StructureBlockInfo> sourceJigsaws = findConnectableJigsaws(sourceLabel, otherLabel, sourcePiece.template(), sourcePiece.placeSettings(), random);
 
@@ -94,46 +95,72 @@ public class JigsawUtil {
 		// Adjoinable Template must use "baseline" configuration
 		List<StructureTemplate.StructureBlockInfo> connectableJigsaws = findConnectableJigsaws(otherLabel, sourceLabel, otherTemplate, new StructurePlaceSettings(), random);
 
-		if (connectableJigsaws.isEmpty()) return;
-
 		generatePiecesAtJunctions(random, sourceJigsaws, connectableJigsaws, canFlip, sourcePiece.placeSettings().getMirror(), sourcePiece.placeSettings().getRotation(), sourcePiece.templatePosition(), placer);
 	}
 
 	public static void generatePiecesAtJunctions(RandomSource random, List<StructureTemplate.StructureBlockInfo> sourceJigsaws, List<StructureTemplate.StructureBlockInfo> connectableJigsaws, boolean canFlip, Mirror sourceMirror, Rotation sourceRotation, BlockPos sourcePos, BiConsumer<BlockPos, StructurePlaceSettings> placer) {
+		if (connectableJigsaws.isEmpty()) return;
+
 		for (final StructureTemplate.StructureBlockInfo sourceJigsaw : sourceJigsaws) {
 			Optional<StructureTemplate.StructureBlockInfo> matchedJigsaw = connectableJigsaws.stream()
 				.filter(info -> canRearrangeForConnection(sourceJigsaw, info))
 				.findFirst();
 			// Filter for Jigsaws that can re-orient for connection to the source jigsaw
 			if (matchedJigsaw.isPresent()) {
-				StructureTemplate.StructureBlockInfo otherJigsaw = matchedJigsaw.get();
-				boolean doMirror = canFlip && random.nextBoolean();
+				boolean isVertical = JigsawBlock.getFrontFacing(sourceJigsaw.state()).getAxis().isVertical();
+				generateAtJunction(isVertical, random, canFlip, sourceMirror, sourceRotation, sourcePos, sourceJigsaw, matchedJigsaw.get(), placer);
 
-				Direction sourceFront = sourceMirror.mirror(JigsawBlock.getFrontFacing(sourceJigsaw.state()));
-				Direction otherFront = JigsawBlock.getFrontFacing(otherJigsaw.state());
-
-				if (sourceMirror != Mirror.NONE && sourceRotation.rotate(Direction.NORTH).getAxis() == Direction.Axis.X)
-					sourceFront = sourceFront.getOpposite();
-
-				Mirror mirror = RotationUtil.mirrorOverAxis(doMirror, otherFront.getAxis());
-				Rotation relativeRotation = RotationUtil.getRelativeRotation(otherFront.getOpposite(), sourceFront);
-				BlockPos otherOffset = otherJigsaw.pos(); //RotationUtil.mirrorOffset(sourceMirror, otherJigsaw.pos());
-
-				BlockPos processedOffset = doMirror ? RotationUtil.mirrorOffset(mirror, otherOffset) : otherOffset;
-
-				StructurePlaceSettings placementSettings = new StructurePlaceSettings();
-				placementSettings.setMirror(mirror);
-				placementSettings.setRotation(relativeRotation);
-				placementSettings.setRotationPivot(processedOffset);
-				//RotationUtil.mirrorPlaceSettings(sourceMirror, placementSettings);
-
-				BlockPos placePos = sourcePos.offset(sourceJigsaw.pos()).relative(sourceFront).subtract(processedOffset);
-				placer.accept(placePos, placementSettings);
-
-				// Now that we used the  Re-shuffle for next loop iteration
+				// Now that we used the list, re-shuffle for next loop iteration
 				Util.shuffle(connectableJigsaws, random);
 				SinglePoolElement.sortBySelectionPriority(connectableJigsaws);
 			}
+		}
+
+	}
+
+	private static void generateAtJunction(boolean isVertical, RandomSource random, boolean canFlip, Mirror sourceMirror, Rotation sourceRotation, BlockPos sourcePos, StructureTemplate.StructureBlockInfo sourceJigsaw, StructureTemplate.StructureBlockInfo otherJigsaw, BiConsumer<BlockPos, StructurePlaceSettings> placer) {
+		boolean doMirror = canFlip && random.nextBoolean();
+
+		Direction sourceFront = sourceMirror.mirror(JigsawBlock.getFrontFacing(sourceJigsaw.state()));
+		Direction otherFront = otherJigsaw.state().getValue(JigsawBlock.ORIENTATION).front();
+
+		if (isVertical) {
+			Direction sourceTop = sourceMirror.mirror(JigsawBlock.getTopFacing(sourceJigsaw.state()));
+			Direction otherTop = JigsawBlock.getTopFacing(otherJigsaw.state());
+
+			Mirror mirror = RotationUtil.mirrorOverAxis(doMirror, otherFront.getAxis());
+			Rotation relativeRotation = RotationUtil.getRelativeRotation(otherTop, sourceTop);
+
+			BlockPos otherOffset = otherJigsaw.pos();
+			BlockPos processedOffset = doMirror ? RotationUtil.mirrorOffset(mirror, otherOffset) : otherOffset;
+
+			BlockPos sourceOffset = sourceJigsaw.pos();
+			BlockPos sourceJigsawWorldPos = sourcePos.offset(sourceOffset);
+			BlockPos facedPos = sourceJigsawWorldPos.relative(sourceFront);
+			BlockPos placePos = facedPos.subtract(processedOffset);
+
+			StructurePlaceSettings placementSettings = new StructurePlaceSettings();
+			placementSettings.setMirror(mirror);
+			placementSettings.setRotation(relativeRotation);
+			placementSettings.setRotationPivot(processedOffset);
+			placer.accept(placePos, placementSettings);
+		} else {
+			if (sourceMirror != Mirror.NONE && sourceRotation.rotate(Direction.NORTH).getAxis() == Direction.Axis.X)
+				sourceFront = sourceFront.getOpposite();
+
+			Mirror mirror = RotationUtil.mirrorOverAxis(doMirror, otherFront.getAxis());
+			Rotation relativeRotation = RotationUtil.getRelativeRotation(otherFront.getOpposite(), sourceFront);
+
+			BlockPos otherOffset = otherJigsaw.pos();
+			BlockPos processedOffset = doMirror ? RotationUtil.mirrorOffset(mirror, otherOffset) : otherOffset;
+
+			BlockPos placePos = sourcePos.offset(sourceJigsaw.pos()).relative(sourceFront).subtract(processedOffset);
+
+			StructurePlaceSettings placementSettings = new StructurePlaceSettings();
+			placementSettings.setMirror(mirror);
+			placementSettings.setRotation(relativeRotation);
+			placementSettings.setRotationPivot(processedOffset);
+			placer.accept(placePos, placementSettings);
 		}
 	}
 }

@@ -44,6 +44,5 @@ public final class TowerFoyer extends TwilightTemplateStructurePiece {
 
 	@Override
 	protected void handleDataMarker(String label, BlockPos pos, ServerLevelAccessor levelAccessor, RandomSource random, BoundingBox boundingBox) {
-
 	}
 }
