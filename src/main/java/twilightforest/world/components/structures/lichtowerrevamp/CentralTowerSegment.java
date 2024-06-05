@@ -34,27 +34,31 @@ public final class CentralTowerSegment extends TwilightTemplateStructurePiece im
 				random,
 				this,
 				this.structureManager.getOrCreate(TwilightForestMod.prefix("lich_tower/tower_slice")),
-				"twilightforest:lich_tower/tower_above",
 				"twilightforest:lich_tower/tower_below",
 				false,
-				(pos, config) -> {
+				1,
+				(pos, config, direction) -> {
 					StructurePiece segment = new CentralTowerSegment(this.structureManager, this.genDepth + 1, config, pos);
 					structureStart.addPiece(segment);
 					segment.addChildren(this, structureStart, random);
+					return true;
 				}
 			);
+
+			TowerBridge.generateBridges(random, this.structureManager, structureStart, this, 0, 1, true);
 		} else {
 			JigsawUtil.generateAtJunctions(
 				random,
 				this,
 				this.structureManager.getOrCreate(TwilightForestMod.prefix("lich_tower/tower_boss_room")),
-				"twilightforest:lich_tower/tower_above",
 				"twilightforest:lich_tower/tower_below",
 				false,
-				(pos, config) -> {
+				1,
+				(pos, config, direction) -> {
 					StructurePiece bossRoom = new BossRoom(this.structureManager, config, pos);
 					structureStart.addPiece(bossRoom);
 					bossRoom.addChildren(this, structureStart, random);
+					return true;
 				}
 			);
 		}

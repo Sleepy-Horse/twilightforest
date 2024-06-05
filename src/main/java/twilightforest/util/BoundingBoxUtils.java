@@ -104,4 +104,20 @@ public class BoundingBoxUtils {
 			vec3List.stream().mapToDouble(Vec3::z).reduce(first.z, Math::max) + expand
 		);
 	}
+
+	@NotNull
+	public static BoundingBox shiftBoxTowards(BoundingBox source, Direction towards, int distance) {
+		int xShift = towards.getStepX() * (distance + source.getXSpan());
+		int yShift = towards.getStepY() * (distance + source.getYSpan());
+		int zShift = towards.getStepZ() * (distance + source.getZSpan());
+		return cloneWithAdjustments(source, xShift, yShift, zShift, xShift, yShift, zShift);
+	}
+
+	public static int getVolume(BoundingBox box) {
+		return box.getXSpan() * box.getYSpan() * box.getZSpan();
+	}
+
+	public static boolean isEmpty(BoundingBox box) {
+		return getVolume(box) == 0;
+	}
 }

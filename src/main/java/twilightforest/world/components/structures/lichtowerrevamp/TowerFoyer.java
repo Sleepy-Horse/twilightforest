@@ -31,13 +31,15 @@ public final class TowerFoyer extends TwilightTemplateStructurePiece {
 			random,
 			this,
 			this.structureManager.getOrCreate(TwilightForestMod.prefix("lich_tower/tower_base")),
-			"twilightforest:lich_tower/foyer", // Jigsaw name label to search within the current template, target label within the other template
-			"twilightforest:lich_tower/tower_base", // Jigsaw target label to search within the current template, name label within the other template
+			"twilightforest:lich_tower/tower_base", // Jigsaw name label to search within the current template, target label within the other template
+			// Jigsaw target label to search within the current template, name label within the other template
 			false, // Whether the new piece can be mirrored
-			(pos, config) -> {
+			1, // Max attempts
+			(pos, config, direction) -> {
 				StructurePiece towerBase = new CentralTowerBase(this.structureManager, config, pos);
 				structureStart.addPiece(towerBase);
 				towerBase.addChildren(this, structureStart, random);
+				return true;
 			}
 		);
 	}

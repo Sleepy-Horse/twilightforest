@@ -30,15 +30,18 @@ public final class CentralTowerBase extends TwilightTemplateStructurePiece {
 			random,
 			this,
 			this.structureManager.getOrCreate(TwilightForestMod.prefix("lich_tower/tower_slice")),
-			"twilightforest:lich_tower/tower_above",
 			"twilightforest:lich_tower/tower_below",
 			false,
-			(pos, config) -> {
+			1,
+			(pos, config, direction) -> {
 				StructurePiece segment = new CentralTowerSegment(this.structureManager, 2, config, pos);
 				structureStart.addPiece(segment);
 				segment.addChildren(this, structureStart, random);
+				return true;
 			}
 		);
+
+		TowerBridge.generateBridges(random, this.structureManager, structureStart, this, 0, random.nextInt(2), true);
 	}
 
 	@Override
