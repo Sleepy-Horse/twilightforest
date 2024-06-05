@@ -11,6 +11,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlac
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.neoforged.neoforge.common.world.PieceBeardifierModifier;
+import org.jetbrains.annotations.NotNull;
 import twilightforest.TwilightForestMod;
 import twilightforest.init.TFStructurePieceTypes;
 import twilightforest.util.JigsawUtil;
@@ -80,7 +81,7 @@ public final class TowerBridge extends TwilightTemplateStructurePiece implements
 		if (attempts < 1)
 			return;
 
-		final String name = fromCentralTower ? "central_bridge" : "room_bridge";
+		final String name = pickBridge(fromCentralTower, random);
 		JigsawUtil.generateAtJunctions(
 			random,
 			sourcePiece,
@@ -100,5 +101,13 @@ public final class TowerBridge extends TwilightTemplateStructurePiece implements
 				return true;
 			}
 		);
+	}
+
+	private static @NotNull String pickBridge(boolean fromCentralTower, RandomSource random) {
+		if (fromCentralTower)
+			return "central_bridge";
+
+		// TODO More bridge designs
+		return random.nextBoolean() ? "room_bridge" : "no_bridge";
 	}
 }
