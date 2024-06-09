@@ -5,22 +5,16 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.block.JigsawBlock;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructurePieceAccessor;
 import net.minecraft.world.level.levelgen.structure.TerrainAdjustment;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.neoforged.neoforge.common.world.PieceBeardifierModifier;
 import twilightforest.init.TFStructurePieceTypes;
-import twilightforest.util.BoundingBoxUtils;
-import twilightforest.util.JigsawUtil;
 import twilightforest.world.components.structures.TwilightTemplateStructurePiece;
-
-import java.util.List;
 
 public final class TowerRoom extends TwilightTemplateStructurePiece implements PieceBeardifierModifier {
 	public TowerRoom(StructurePieceSerializationContext ctx, CompoundTag compoundTag) {
@@ -37,24 +31,6 @@ public final class TowerRoom extends TwilightTemplateStructurePiece implements P
 			return;
 
 		TowerBridge.generateBridges(random, this.structureManager, structureStart, this, this.genDepth, 3, false);
-	}
-
-	public static boolean canExpand(StructurePieceAccessor structureStart, StructureTemplate template, StructurePlaceSettings placeSettings, BlockPos templatePosition) {
-		BoundingBox templateBounds = template.getBoundingBox(placeSettings, templatePosition).inflatedBy(-1);
-
-		if (BoundingBoxUtils.isEmpty(templateBounds))
-			return false;
-
-		List<StructureTemplate.StructureBlockInfo> sourceJigsaws = JigsawUtil.findConnectableJigsaws("bridge", "target", template, placeSettings, null);
-
-		for (StructureTemplate.StructureBlockInfo info : sourceJigsaws) {
-			BoundingBox shifted = BoundingBoxUtils.shiftBoxTowards(templateBounds, JigsawBlock.getFrontFacing(info.state()), 5);
-			if (structureStart.findCollisionPiece(shifted) != null) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	@Override
