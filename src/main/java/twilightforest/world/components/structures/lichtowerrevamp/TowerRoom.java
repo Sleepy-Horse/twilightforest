@@ -10,27 +10,48 @@ import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructurePieceAccessor;
 import net.minecraft.world.level.levelgen.structure.TerrainAdjustment;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.neoforged.neoforge.common.world.PieceBeardifierModifier;
 import twilightforest.init.TFStructurePieceTypes;
-import twilightforest.world.components.structures.TwilightTemplateStructurePiece;
+import twilightforest.util.jigsaw.JigsawPlaceContext;
+import twilightforest.util.jigsaw.JigsawRecord;
+import twilightforest.world.components.structures.TwilightJigsawPiece;
 
-public final class TowerRoom extends TwilightTemplateStructurePiece implements PieceBeardifierModifier {
+public final class TowerRoom extends TwilightJigsawPiece implements PieceBeardifierModifier {
+	private final int roomSize;
+
 	public TowerRoom(StructurePieceSerializationContext ctx, CompoundTag compoundTag) {
 		super(TFStructurePieceTypes.TOWER_ROOM.get(), compoundTag, ctx, readSettings(compoundTag));
+
+		this.roomSize = compoundTag.getInt("room_size");
 	}
 
-	public TowerRoom(StructureTemplateManager structureManager, int genDepth, StructurePlaceSettings placeSettings, BlockPos startPosition, ResourceLocation roomId) {
-		super(TFStructurePieceTypes.TOWER_ROOM.get(), genDepth, structureManager, roomId, placeSettings, startPosition);
+	public TowerRoom(StructureTemplateManager structureManager, int genDepth, JigsawPlaceContext jigsawContext, ResourceLocation roomId, int roomSize) {
+		super(TFStructurePieceTypes.TOWER_ROOM.get(), genDepth, structureManager, roomId, jigsawContext);
+
+		this.roomSize = roomSize;
+	}
+
+	@Override
+	protected void addAdditionalSaveData(StructurePieceSerializationContext ctx, CompoundTag structureTag) {
+		super.addAdditionalSaveData(ctx, structureTag);
+
+		structureTag.putInt("room_size", this.roomSize);
 	}
 
 	@Override
 	public void addChildren(StructurePiece parent, StructurePieceAccessor structureStart, RandomSource random) {
-		if (this.genDepth > 6)
+		if (this.genDepth > 30 || this.roomSize < 1)
 			return;
 
-		TowerBridge.generateBridges(random, this.structureManager, structureStart, this, this.genDepth, 3, false);
+		super.addChildren(parent, structureStart, random);
+	}
+
+	@Override
+	protected void processJigsaw(StructurePiece parent, StructurePieceAccessor pieceAccessor, RandomSource random, JigsawRecord record) {
+		if ("twilightforest:lich_tower/bridge".equals(record.target())) {
+			TowerBridge.putBridge(this, pieceAccessor, random, record.pos(), record.orientation(), this.structureManager, false, this.roomSize - random.nextInt(2) - (random.nextInt(this.genDepth) >> 1), this.getGenDepth() + 1);
+		}
 	}
 
 	@Override

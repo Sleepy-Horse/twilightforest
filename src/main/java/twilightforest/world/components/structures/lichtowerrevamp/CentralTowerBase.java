@@ -7,44 +7,50 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructurePieceAccessor;
+import net.minecraft.world.level.levelgen.structure.TerrainAdjustment;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
+import net.neoforged.neoforge.common.world.PieceBeardifierModifier;
 import twilightforest.TwilightForestMod;
 import twilightforest.init.TFStructurePieceTypes;
-import twilightforest.util.JigsawUtil;
-import twilightforest.world.components.structures.TwilightTemplateStructurePiece;
+import twilightforest.util.jigsaw.JigsawPlaceContext;
+import twilightforest.util.jigsaw.JigsawRecord;
+import twilightforest.world.components.structures.TwilightJigsawPiece;
 
-public final class CentralTowerBase extends TwilightTemplateStructurePiece {
+public final class CentralTowerBase extends TwilightJigsawPiece implements PieceBeardifierModifier {
 	public CentralTowerBase(StructurePieceSerializationContext ctx, CompoundTag compoundTag) {
 		super(TFStructurePieceTypes.CENTRAL_TOWER_BASE.get(), compoundTag, ctx, readSettings(compoundTag));
 	}
 
-	public CentralTowerBase(StructureTemplateManager structureManager, StructurePlaceSettings placeSettings, BlockPos startPosition) {
-		super(TFStructurePieceTypes.CENTRAL_TOWER_BASE.get(), 1, structureManager, TwilightForestMod.prefix("lich_tower/tower_base"), placeSettings, startPosition);
+	public CentralTowerBase(StructureTemplateManager structureManager, JigsawPlaceContext jigsawContext) {
+		super(TFStructurePieceTypes.CENTRAL_TOWER_BASE.get(), 1, structureManager, TwilightForestMod.prefix("lich_tower/tower_base"), jigsawContext);
 	}
 
 	@Override
-	public void addChildren(StructurePiece parent, StructurePieceAccessor structureStart, RandomSource random) {
-		JigsawUtil.generateAtJunctions(
-			random,
-			this,
-			this.structureManager.getOrCreate(TwilightForestMod.prefix("lich_tower/tower_slice")),
-			"twilightforest:lich_tower/tower_below",
-			false,
-			1,
-			(pos, config, direction) -> {
-				StructurePiece segment = new CentralTowerSegment(this.structureManager, 2, config, pos);
-				structureStart.addPiece(segment);
-				segment.addChildren(this, structureStart, random);
-				return true;
-			}
-		);
-
-		TowerBridge.generateBridges(random, this.structureManager, structureStart, this, 0, random.nextInt(2), true);
+	protected void processJigsaw(StructurePiece parent, StructurePieceAccessor pieceAccessor, RandomSource random, JigsawRecord connection) {
+		if ("twilightforest:lich_tower/tower_below".equals(connection.target())) {
+			CentralTowerSegment.putTowerSegment(pieceAccessor, random, connection.pos(), connection.orientation(), this, this.structureManager);
+		} else if ("twilightforest:lich_tower/bridge".equals(connection.target())) {
+			TowerBridge.putBridge(this, pieceAccessor, random, connection.pos(), connection.orientation(), this.structureManager, true, 4, this.getGenDepth() + 1);
+		}
 	}
 
 	@Override
 	protected void handleDataMarker(String label, BlockPos pos, ServerLevelAccessor levelAccessor, RandomSource random, BoundingBox boundingBox) {
+	}
+
+	@Override
+	public BoundingBox getBeardifierBox() {
+		return this.boundingBox;
+	}
+
+	@Override
+	public TerrainAdjustment getTerrainAdjustment() {
+		return TerrainAdjustment.BEARD_BOX;
+	}
+
+	@Override
+	public int getGroundLevelDelta() {
+		return 1;
 	}
 }

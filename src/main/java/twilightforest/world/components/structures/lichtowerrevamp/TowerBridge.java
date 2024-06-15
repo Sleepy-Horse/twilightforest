@@ -1,38 +1,35 @@
 package twilightforest.world.components.structures.lichtowerrevamp;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.FrontAndTop;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.StructureManager;
-import net.minecraft.world.level.WorldGenLevel;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.JigsawBlock;
-import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.levelgen.structure.*;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
+import net.minecraft.world.level.levelgen.structure.StructurePieceAccessor;
+import net.minecraft.world.level.levelgen.structure.TerrainAdjustment;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.neoforged.neoforge.common.world.PieceBeardifierModifier;
-import org.jetbrains.annotations.NotNull;
-import twilightforest.TwilightForestMod;
+import org.jetbrains.annotations.Nullable;
 import twilightforest.init.TFStructurePieceTypes;
-import twilightforest.util.BoundingBoxUtils;
-import twilightforest.util.JigsawUtil;
-import twilightforest.world.components.structures.TwilightTemplateStructurePiece;
+import twilightforest.util.jigsaw.JigsawPlaceContext;
+import twilightforest.util.jigsaw.JigsawRecord;
+import twilightforest.world.components.structures.TwilightJigsawPiece;
 
-import java.util.List;
-
-public final class TowerBridge extends TwilightTemplateStructurePiece implements PieceBeardifierModifier {
+public final class TowerBridge extends TwilightJigsawPiece implements PieceBeardifierModifier {
 	public TowerBridge(StructurePieceSerializationContext ctx, CompoundTag compoundTag) {
 		super(TFStructurePieceTypes.TOWER_BRIDGE.get(), compoundTag, ctx, readSettings(compoundTag));
 	}
 
-	public TowerBridge(StructureTemplateManager structureManager, int genDepth, StructurePlaceSettings placeSettings, BlockPos startPosition, String name) {
-		super(TFStructurePieceTypes.TOWER_BRIDGE.get(), genDepth, structureManager, TwilightForestMod.prefix("lich_tower/" + name), placeSettings, startPosition);
+	public TowerBridge(StructureTemplateManager structureManager, int genDepth, JigsawPlaceContext jigsawContext, ResourceLocation templateLocation) {
+		super(TFStructurePieceTypes.TOWER_BRIDGE.get(), genDepth, structureManager, templateLocation, jigsawContext);
+	}
+
+	@Override
+	protected void processJigsaw(StructurePiece parent, StructurePieceAccessor pieceAccessor, RandomSource random, JigsawRecord record) {
 	}
 
 	@Override
@@ -54,96 +51,56 @@ public final class TowerBridge extends TwilightTemplateStructurePiece implements
 		return 0;
 	}
 
-	@Override
-	public void postProcess(WorldGenLevel pLevel, StructureManager pStructureManager, ChunkGenerator pGenerator, RandomSource pRandom, BoundingBox pBox, ChunkPos pChunkPos, BlockPos pPos) {
-		super.postProcess(pLevel, pStructureManager, pGenerator, pRandom, pBox, pChunkPos, pPos);
+	public static void putBridge(TwilightJigsawPiece parent, StructurePieceAccessor pieceAccessor, RandomSource random, BlockPos sourceJigsawPos, FrontAndTop sourceOrientation, StructureTemplateManager structureManager, boolean fromCentralTower, int roomMaxSize, int depth) {
+		for (ResourceLocation bridgeId : TowerPieces.bridges(fromCentralTower, random)) {
+			JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(parent, sourceJigsawPos, sourceOrientation, structureManager, bridgeId, fromCentralTower ? "twilightforest:lich_tower/bridge_center" : "twilightforest:lich_tower/bridge", random);
 
-		pLevel.setBlock(this.templatePosition().above(), Blocks.BEACON.defaultBlockState(), 3);
-		pLevel.setBlock(this.templatePosition().above().above(), Blocks.MAGENTA_GLAZED_TERRACOTTA.defaultBlockState().rotate(this.getRotation()), 3);
-	}
+			if (placeableJunction != null) {
+				TowerBridge bridge = new TowerBridge(structureManager, depth + 1, placeableJunction, bridgeId);
 
-	public static void generateBridges(final RandomSource random, final StructureTemplateManager structureManager, final StructurePieceAccessor structureStart, final TemplateStructurePiece sourcePiece, final int depth, int attempts, boolean fromCentralTower) {
-		if (attempts < 1)
-			return;
-
-		final String name = pickBridge(fromCentralTower, random);
-		StructureTemplate bridgeTemplate = structureManager.getOrCreate(TwilightForestMod.prefix("lich_tower/" + name));
-		JigsawUtil.generateAtJunctions(
-			random,
-			sourcePiece,
-			bridgeTemplate,
-			"twilightforest:lich_tower/bridge",
-			false,
-			attempts,
-			(pos, config, direction) -> {
-				TowerBridge bridge = new TowerBridge(structureManager, depth + 1, config, pos, name);
-
-				if (!bridge.tryFitRandomRoom(random, structureStart, depth + 1))
-					return false;
-
-				structureStart.addPiece(bridge);
-				bridge.addChildren(sourcePiece, structureStart, random);
-
-				return true;
-			}
-		);
-	}
-
-	private static @NotNull String pickBridge(boolean fromCentralTower, RandomSource random) {
-		if (fromCentralTower)
-			return "central_bridge";
-
-		// TODO More bridge designs
-		return random.nextBoolean() ? "room_bridge" : "no_bridge";
-	}
-
-	public boolean tryFitRandomRoom(final RandomSource random, final StructurePieceAccessor structureStart, final int depth) {
-		ResourceLocation roomId = TowerRooms.getARoom(random, 4 - depth);
-		return roomId != null && this.tryPlaceRoom(random, structureStart, depth, roomId);
-	}
-
-	private boolean tryPlaceRoom(final RandomSource random, final StructurePieceAccessor structureStart, final int depth, final ResourceLocation roomId) {
-		StructureTemplate newTemplate = this.structureManager.getOrCreate(roomId);
-		int successes = JigsawUtil.generateAtJunctions(
-			random,
-			this,
-			newTemplate,
-			"twilightforest:lich_tower/room",
-			false,
-			1,
-			(pos, config, direction) -> {
-				if (!canExpand(structureStart, newTemplate, config, pos, 5))
-					return false;
-
-				TowerRoom segment = new TowerRoom(this.structureManager, depth, config, pos, roomId);
-
-				if (structureStart.findCollisionPiece(segment.getBoundingBox()) != null) {
-					return false;
+				if (bridge.tryGenerateRoom(random, pieceAccessor, roomMaxSize)) {
+					pieceAccessor.addPiece(bridge);
+					bridge.addChildren(parent, pieceAccessor, random);
+					return;
 				}
-
-				structureStart.addPiece(segment);
-				segment.addChildren(this, structureStart, random);
-				return true;
 			}
-		);
-		return successes > 0;
+		}
 	}
 
-	public static boolean canExpand(StructurePieceAccessor structureStart, StructureTemplate template, StructurePlaceSettings placeSettings, BlockPos templatePosition, int bridgeLength) {
-		BoundingBox templateBounds = template.getBoundingBox(placeSettings, templatePosition).inflatedBy(-1);
+	public boolean tryGenerateRoom(final RandomSource random, final StructurePieceAccessor structureStart, final int roomMaxSize) {
+		for (JigsawRecord generatingPoint : this.getSpareJigsaws()) {
+			for (int roomSize = Math.max(0, roomMaxSize - 1); roomSize >= 0; roomSize--) {
+				boolean result = this.tryPlaceRoom(random, structureStart, TowerPieces.getARoom(random, roomSize), generatingPoint, roomSize);
 
-		if (BoundingBoxUtils.isEmpty(templateBounds))
-			return false;
-
-		List<StructureTemplate.StructureBlockInfo> sourceJigsaws = JigsawUtil.findConnectableJigsaws("bridge", "target", template, placeSettings, null);
-
-		for (StructureTemplate.StructureBlockInfo info : sourceJigsaws) {
-			BoundingBox shifted = BoundingBoxUtils.shiftBoxTowards(templateBounds, JigsawBlock.getFrontFacing(info.state()), bridgeLength);
-			if (structureStart.findCollisionPiece(shifted) != null) {
-				return false;
+				if (result) {
+					return true;
+				}
 			}
 		}
 
-		return true;
+		return false;
+	}
+
+	private boolean tryPlaceRoom(RandomSource random, StructurePieceAccessor pieceAccessor, @Nullable ResourceLocation roomId, JigsawRecord record, int roomSize) {
+		if (roomId != null) {
+			JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(this, record.pos(), record.orientation(), this.structureManager, roomId, "twilightforest:lich_tower/room", random);
+
+			if (placeableJunction == null) {
+				return false;
+			}
+
+			StructurePiece room = new TowerRoom(this.structureManager, this.genDepth + 1, placeableJunction, roomId, roomSize);
+
+			if (pieceAccessor.findCollisionPiece(room.getBoundingBox()) != null) {
+				return false;
+			}
+
+			pieceAccessor.addPiece(room);
+			room.addChildren(this, pieceAccessor, random);
+
+			return true;
+		}
+
+		return false;
 	}
 }

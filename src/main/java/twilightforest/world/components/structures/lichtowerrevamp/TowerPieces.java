@@ -6,7 +6,9 @@ import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.Nullable;
 import twilightforest.TwilightForestMod;
 
-public final class TowerRooms {
+import java.util.List;
+
+public final class TowerPieces {
 	// FIXME: Move to DataMap of int -> ResourceLocation[] if possible to obtain RegistryAccess
 	private static final ResourceLocation[] thinTowers = new ResourceLocation[] {
 		TwilightForestMod.prefix("lich_tower/3x3/fence_thin"),
@@ -31,9 +33,22 @@ public final class TowerRooms {
 		TwilightForestMod.prefix("lich_tower/9x9/t_junction")
 	};
 
+	// TODO: more bridges
+	private static final ResourceLocation[] centerBridges = new ResourceLocation[] {
+		TwilightForestMod.prefix("lich_tower/central_bridge")
+	};
+	private static final ResourceLocation[] bridges = new ResourceLocation[] {
+		TwilightForestMod.prefix("lich_tower/no_bridge"),
+		TwilightForestMod.prefix("lich_tower/room_bridge")
+	};
+
+	public static List<ResourceLocation> bridges(boolean fromCentralTower, RandomSource randomSource) {
+		return Util.shuffledCopy(fromCentralTower ? centerBridges : bridges, randomSource);
+	}
+
 	@Nullable
 	public static ResourceLocation getARoom(RandomSource randomSource, int size) {
-		ResourceLocation[] roomList = switch(Math.min(size, 3)) {
+		ResourceLocation[] roomList = switch(size) {
 			case 0 -> thinTowers;
 			case 1 -> rooms5;
 			case 2 -> rooms7;
@@ -48,7 +63,7 @@ public final class TowerRooms {
 		}
 	}
 
-	private TowerRooms() {
+	private TowerPieces() {
 		throw new IllegalStateException("How did we get here?");
 	}
 }
