@@ -82,14 +82,4 @@ public record JigsawRecord(int priority, FrontAndTop orientation, BlockPos pos, 
 
 		return ret;
 	}
-
-	public JigsawRecord reconfigure(StructurePlaceSettings settings) {
-		return new JigsawRecord(
-			this.priority,
-			JigsawUtil.process(this.orientation, settings),
-			StructureTemplate.calculateRelativePosition(settings, this.pos()),
-			this.name,
-			this.target
-		);
-	}
 }

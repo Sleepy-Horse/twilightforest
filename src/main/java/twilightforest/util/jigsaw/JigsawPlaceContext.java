@@ -6,6 +6,7 @@ import net.minecraft.core.FrontAndTop;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.JigsawBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
@@ -37,13 +38,13 @@ public record JigsawPlaceContext(BlockPos templatePos, StructurePlaceSettings pl
 
 	@Nullable
 	private static JigsawPlaceContext pickPlaceableJunction(List<StructureTemplate.StructureBlockInfo> connectableJigsaws, BlockPos sourceTemplatePos, FrontAndTop sourceOrientation, BlockPos sourceJigsawPos, String jigsawLabel, RandomSource random) {
-		JigsawRecord connectable = null;
+		StructureTemplate.StructureBlockInfo connectable = null;
 
 		for (int i = 0; i < connectableJigsaws.size(); i++) {
 			StructureTemplate.StructureBlockInfo info = connectableJigsaws.get(i);
 			CompoundTag nbt = info.nbt();
 			if (nbt != null && jigsawLabel.equals(nbt.getString("name")) && JigsawUtil.canRearrangeForConnection(sourceOrientation, info)) {
-				connectable = JigsawRecord.fromJigsawBlock(info);
+				connectable = info;
 				connectableJigsaws.remove(i);
 				break;
 			}
@@ -57,23 +58,23 @@ public record JigsawPlaceContext(BlockPos templatePos, StructurePlaceSettings pl
 		return null;
 	}
 
-	private static JigsawPlaceContext generateAtJunction(boolean useVertical, RandomSource random, BlockPos sourceTemplatePos, FrontAndTop sourceState, BlockPos sourceJigsawPos, JigsawRecord otherJigsaw, List<StructureTemplate.StructureBlockInfo> spareJigsaws) {
+	private static JigsawPlaceContext generateAtJunction(boolean useVertical, RandomSource random, BlockPos sourceTemplatePos, FrontAndTop sourceState, BlockPos sourceJigsawPos, StructureTemplate.StructureBlockInfo otherJigsaw, List<StructureTemplate.StructureBlockInfo> spareJigsaws) {
 		Direction sourceFront = sourceState.front();
 		BlockPos otherOffset = otherJigsaw.pos();
 
 		if (useVertical) {
 			Direction sourceTop = sourceState.top();
-			Direction otherTop = otherJigsaw.orientation().top();
+			Direction otherTop = JigsawBlock.getTopFacing(otherJigsaw.state());
 
 			return getPlacement(sourceTemplatePos, otherOffset, sourceFront, RotationUtil.getRelativeRotation(otherTop, sourceTop), sourceJigsawPos, otherJigsaw, spareJigsaws, random);
 		} else {
-			Direction otherFront = otherJigsaw.orientation().front();
+			Direction otherFront = JigsawBlock.getFrontFacing(otherJigsaw.state());
 
 			return getPlacement(sourceTemplatePos, otherOffset, sourceFront, RotationUtil.getRelativeRotation(otherFront.getOpposite(), sourceFront), sourceJigsawPos, otherJigsaw, spareJigsaws, random);
 		}
 	}
 
-	private static JigsawPlaceContext getPlacement(BlockPos sourceTemplatePos, BlockPos otherOffset, Direction sourceFront, Rotation relativeRotation, BlockPos sourceJigsawPos, JigsawRecord seedJigsaw, List<StructureTemplate.StructureBlockInfo> unconnectedJigsaws, RandomSource random) {
+	private static JigsawPlaceContext getPlacement(BlockPos sourceTemplatePos, BlockPos otherOffset, Direction sourceFront, Rotation relativeRotation, BlockPos sourceJigsawPos, StructureTemplate.StructureBlockInfo seedJigsaw, List<StructureTemplate.StructureBlockInfo> unconnectedJigsaws, RandomSource random) {
 		BlockPos placePos = sourceTemplatePos.offset(sourceJigsawPos).relative(sourceFront).subtract(otherOffset);
 
 		StructurePlaceSettings placementSettings = new StructurePlaceSettings();
@@ -84,6 +85,6 @@ public record JigsawPlaceContext(BlockPos templatePos, StructurePlaceSettings pl
 		// The unconnectedJigsaws list was created without StructurePlaceSettings configuration, so the list needs processing while also applying StructurePlaceSettings
 		List<JigsawRecord> spareJigsaws = JigsawRecord.fromUnprocessedInfos(unconnectedJigsaws, placementSettings, random);
 
-		return new JigsawPlaceContext(placePos, placementSettings, seedJigsaw.reconfigure(placementSettings), spareJigsaws);
+		return new JigsawPlaceContext(placePos, placementSettings, JigsawRecord.fromUnconfiguredJigsaw(seedJigsaw, placementSettings), spareJigsaws);
 	}
 }
