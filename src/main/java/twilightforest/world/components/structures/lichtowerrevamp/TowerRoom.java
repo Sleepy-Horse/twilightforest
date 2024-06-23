@@ -23,17 +23,20 @@ import twilightforest.world.components.structures.TwilightJigsawPiece;
 
 public final class TowerRoom extends TwilightJigsawPiece implements PieceBeardifierModifier {
 	private final int roomSize;
+	private final boolean generateGround;
 
 	public TowerRoom(StructurePieceSerializationContext ctx, CompoundTag compoundTag) {
 		super(TFStructurePieceTypes.TOWER_ROOM.get(), compoundTag, ctx, readSettings(compoundTag));
 
 		this.roomSize = compoundTag.getInt("room_size");
+		this.generateGround = compoundTag.getBoolean("gen_ground");
 	}
 
-	public TowerRoom(StructureTemplateManager structureManager, int genDepth, JigsawPlaceContext jigsawContext, ResourceLocation roomId, int roomSize) {
+	public TowerRoom(StructureTemplateManager structureManager, int genDepth, JigsawPlaceContext jigsawContext, ResourceLocation roomId, int roomSize, boolean generateGround) {
 		super(TFStructurePieceTypes.TOWER_ROOM.get(), genDepth, structureManager, roomId, jigsawContext);
 
 		this.roomSize = roomSize;
+		this.generateGround = generateGround;
 	}
 
 	@Override
@@ -41,6 +44,7 @@ public final class TowerRoom extends TwilightJigsawPiece implements PieceBeardif
 		super.addAdditionalSaveData(ctx, structureTag);
 
 		structureTag.putInt("room_size", this.roomSize);
+		structureTag.putBoolean("gen_ground", this.generateGround);
 	}
 
 	@Override
@@ -50,7 +54,7 @@ public final class TowerRoom extends TwilightJigsawPiece implements PieceBeardif
 				if (this.genDepth > 30 || this.roomSize < 1)
 					break;
 
-				TowerBridge.putBridge(this, pieceAccessor, random, connection.pos(), connection.orientation(), this.structureManager, false, this.roomSize - random.nextInt(2) - (random.nextInt(this.genDepth) >> 1), this.getGenDepth() + 1);
+				TowerBridge.putBridge(this, pieceAccessor, random, connection.pos(), connection.orientation(), this.structureManager, false, this.roomSize - random.nextInt(2) - (random.nextInt(this.genDepth) >> 1), this.getGenDepth() + 1, this.generateGround);
 			}
 			case "twilightforest:lich_tower/roof" -> {
 				JigsawRecord sourceJigsaw = this.getSourceJigsaw();
@@ -90,7 +94,7 @@ public final class TowerRoom extends TwilightJigsawPiece implements PieceBeardif
 
 	@Override
 	public TerrainAdjustment getTerrainAdjustment() {
-		return TerrainAdjustment.NONE;
+		return this.generateGround ? TerrainAdjustment.BEARD_THIN : TerrainAdjustment.NONE;
 	}
 
 	@Override
