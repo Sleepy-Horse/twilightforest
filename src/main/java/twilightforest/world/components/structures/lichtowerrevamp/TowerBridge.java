@@ -65,6 +65,19 @@ public final class TowerBridge extends TwilightJigsawPiece implements PieceBeard
 				}
 			}
 		}
+
+		// This here is reached only if a room was not successfully generated - now a wall must be placed to cover where the bridge would have been
+
+		if (fromCentralTower) return; // Don't generate covers from the central tower
+
+		ResourceLocation bridgeCoverLocation = TowerPieces.rollCover(random);
+		JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(parent, sourceJigsawPos, sourceOrientation, structureManager, bridgeCoverLocation, "twilightforest:lich_tower/bridge", random);
+
+		if (placeableJunction != null) {
+			StructurePiece bridgeCoverPiece = new TowerBridge(structureManager, depth + 1, placeableJunction, bridgeCoverLocation);
+			pieceAccessor.addPiece(bridgeCoverPiece);
+			bridgeCoverPiece.addChildren(parent, pieceAccessor, random);
+		}
 	}
 
 	public boolean tryGenerateRoom(final RandomSource random, final StructurePieceAccessor structureStart, final int roomMaxSize, boolean canPutGround) {

@@ -42,6 +42,11 @@ public final class TowerPieces {
 		TwilightForestMod.prefix("lich_tower/no_bridge"),
 		TwilightForestMod.prefix("lich_tower/room_bridge")
 	};
+	private static final ResourceLocation COBBLESTONE_WALL = TwilightForestMod.prefix("lich_tower/wall_cobble");
+	private static final ResourceLocation[] bridgeCovers = new ResourceLocation[] {
+		TwilightForestMod.prefix("lich_tower/wall_bars"),
+		COBBLESTONE_WALL
+	};
 	private static final ResourceLocation[] mobBridges = new ResourceLocation[] {
 		TwilightForestMod.prefix("lich_tower/bridge_spawner"),
 		TwilightForestMod.prefix("lich_tower/bridge_spawner_bend"),
@@ -135,6 +140,10 @@ public final class TowerPieces {
 
 	public static ResourceLocation rollMobBridge(RandomSource randomSource) {
 		return Util.getRandom(mobBridges, randomSource);
+	}
+
+	public static ResourceLocation rollCover(RandomSource randomSource) {
+		return Util.getRandom(bridgeCovers, randomSource);
 	}
 
 	public static Iterable<ResourceLocation> roofs(RandomSource randomSource, int size, boolean doSideRoofOnly) {
