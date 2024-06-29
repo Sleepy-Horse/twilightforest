@@ -52,16 +52,18 @@ public final class TowerBridge extends TwilightJigsawPiece implements PieceBeard
 	}
 
 	public static void putBridge(TwilightJigsawPiece parent, StructurePieceAccessor pieceAccessor, RandomSource random, BlockPos sourceJigsawPos, FrontAndTop sourceOrientation, StructureTemplateManager structureManager, boolean fromCentralTower, int roomMaxSize, int depth, boolean canPutGround) {
-		for (ResourceLocation bridgeId : TowerPieces.bridges(fromCentralTower, random)) {
-			JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(parent, sourceJigsawPos, sourceOrientation, structureManager, bridgeId, fromCentralTower ? "twilightforest:lich_tower/bridge_center" : "twilightforest:lich_tower/bridge", random);
+		if (random.nextInt(4) == 0) {
+			for (ResourceLocation bridgeId : TowerPieces.bridges(fromCentralTower, random)) {
+				JigsawPlaceContext placeableJunction = JigsawPlaceContext.pickPlaceableJunction(parent, sourceJigsawPos, sourceOrientation, structureManager, bridgeId, fromCentralTower ? "twilightforest:lich_tower/bridge_center" : "twilightforest:lich_tower/bridge", random);
 
-			if (placeableJunction != null) {
-				TowerBridge bridge = new TowerBridge(structureManager, depth + 1, placeableJunction, bridgeId);
+				if (placeableJunction != null) {
+					TowerBridge bridge = new TowerBridge(structureManager, depth + 1, placeableJunction, bridgeId);
 
-				if (bridge.tryGenerateRoom(random, pieceAccessor, roomMaxSize, canPutGround)) {
-					pieceAccessor.addPiece(bridge);
-					bridge.addChildren(parent, pieceAccessor, random);
-					return;
+					if (bridge.tryGenerateRoom(random, pieceAccessor, roomMaxSize, canPutGround)) {
+						pieceAccessor.addPiece(bridge);
+						bridge.addChildren(parent, pieceAccessor, random);
+						return;
+					}
 				}
 			}
 		}

@@ -71,7 +71,7 @@ public final class TowerRoom extends TwilightJigsawPiece implements PieceBeardif
 					if (placeableJunction != null) {
 						TowerRoof roofPiece = new TowerRoof(this.genDepth + 1, this.structureManager, roofLocation, placeableJunction);
 
-						if (pieceAccessor.findCollisionPiece(BoundingBoxUtils.safeRetract(roofPiece.getBoundingBox(), Direction.DOWN, 1)) == null) {
+						if (pieceAccessor.findCollisionPiece(roofPiece.generationCollisionBox()) == null) {
 							pieceAccessor.addPiece(roofPiece);
 							roofPiece.addChildren(this, pieceAccessor, random);
 
